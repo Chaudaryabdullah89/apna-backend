@@ -21,6 +21,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy - required for rate limiting behind Vercel
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 app.use(mongoSanitize());
@@ -137,6 +140,13 @@ const connectDB = async () => {
       useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      retryWrites: true,
+      w: 'majority',
+      maxPoolSize: 10,
+      minPoolSize: 5,
+      maxIdleTimeMS: 60000,
+      connectTimeoutMS: 10000,
+      family: 4 // Use IPv4, skip trying IPv6
     });
     console.log('Connected to MongoDB successfully');
 
@@ -218,7 +228,8 @@ app.use((err, req, res, next) => {
 process.on('unhandledRejection', (err) => {
   console.error('UNHANDLED REJECTION! 💥 Shutting down...');
   console.error(err.name, err.message);
-  process.exit(1);
+  // Don't exit the process, let it retry
+  console.log('Will retry connection...');
 });
 
 // Handle uncaught exceptions
