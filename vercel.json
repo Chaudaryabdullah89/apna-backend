@@ -5,17 +5,35 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["views/**/*", "public/**/*", "node_modules/**/*", "routes/**/*", "models/**/*", "middleware/**/*", "config/**/*"]
+        "includeFiles": [
+          "views/**/*",
+          "public/**/*", 
+          "node_modules/**/*",
+          "routes/**/*",
+          "models/**/*",
+          "middleware/**/*",
+          "config/**/*",
+          "uploads/**/*",
+          "seed/**/*"
+        ]
       }
     }
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/uploads/$1"
+    },
+    {
       "src": "/css/(.*)",
       "dest": "/public/css/$1"
     },
     {
-      "src": "/js/(.*)",
+      "src": "/js/(.*)", 
       "dest": "/public/js/$1"
     },
     {
@@ -23,13 +41,15 @@
       "dest": "/public/images/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/health",
       "dest": "/server.js"
     },
     {
       "src": "/(.*)",
-      "status": 404,
       "dest": "/server.js"
     }
-  ]
-} 
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

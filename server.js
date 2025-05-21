@@ -49,9 +49,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 app.options('*', cors());
 // CORS configuration
+app.use(cors(corsOptions));
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: ['https://store-1-c7uw.vercel.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 // Content Security Policy
 app.use(helmet.contentSecurityPolicy({
