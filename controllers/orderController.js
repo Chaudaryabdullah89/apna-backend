@@ -10,15 +10,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const createOrder = async (req, res) => {
   try {
     const { 
-      userId, 
       items, 
       shippingAddress, 
       totalAmount,
       customerName,
       customerEmail,
       paymentMethod,
-      shippingPrice,
-      taxPrice
+      shippingCost,
+      taxPrice,
+      discountAmount
     } = req.body;
 
     // Basic validation
@@ -26,73 +26,98 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Missing required order details.' });
     }
 
-    // Get user details if userId is provided
-    let user = null;
-    if (userId) {
-      user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found.' });
+    // Validate products and calculate total
+    let total = 0;
+    for (const item of items) {
+      const product = await Product.findById(item.product);
+      if (!product) {
+        return res.status(400).json({ message: `Product not found: ${item.product}` });
       }
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+      }
+      total += product.price * item.quantity;
     }
+
+    // Add shipping and tax
+    total += shippingCost || 0;
+    total += taxPrice || 0;
+    total -= discountAmount || 0;
 
     // Create a new order
     const order = new Order({
-      user: userId || null,
-      customerName,
-      customerEmail,
       items,
       shippingAddress,
-      totalAmount,
-      shippingPrice,
+      totalAmount: total,
+      shippingCost,
       taxPrice,
+      discountAmount,
       paymentMethod,
+      customerName,
+      customerEmail,
       paymentStatus: 'pending',
       orderStatus: 'processing'
     });
 
-    // Save the order to the database temporarily (status is pending)
+    // Save the order to the database
     await order.save();
 
-    // Create a Stripe Payment Intent if payment method is card
+    // Update product stock
+    for (const item of items) {
+      await Product.findByIdAndUpdate(item.product, {
+        $inc: { stock: -item.quantity }
+      });
+    }
+
+    // Handle payment based on method
     if (paymentMethod === 'card') {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(totalAmount * 100), // Amount in cents
-        currency: 'usd',
-        metadata: { orderId: order._id.toString() },
-      });
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(total * 100), // Convert to cents
+          currency: 'usd',
+          metadata: { orderId: order._id.toString() },
+          automatic_payment_methods: {
+            enabled: true,
+          },
+        });
 
-      // Update order with payment intent ID
-      order.paymentIntentId = paymentIntent.id;
-      await order.save();
+        // Update order with payment intent ID
+        order.paymentIntentId = paymentIntent.id;
+        await order.save();
 
-      // Send order confirmation email
-      await sendEmail(
-        customerEmail,
-        'Order Confirmation',
-        'orderConfirmation',
-        {
-          name: customerName,
-          orderNumber: order._id.toString().slice(-6),
-          orderDate: new Date().toLocaleDateString(),
-          totalAmount: totalAmount.toFixed(2),
-          paymentMethod: 'Credit Card',
-          shippingMethod: 'Standard Shipping',
-          estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          subtotal: totalAmount - shippingPrice - taxPrice,
-          shippingCost: shippingPrice,
-          tax: taxPrice,
-          totalAmount: totalAmount,
-          shippingAddress: shippingAddress,
-          trackingUrl: `${process.env.FRONTEND_URL}/order/${order._id}`
-        }
-      );
+        // Send order confirmation email
+        await sendEmail(
+          customerEmail,
+          'Order Confirmation',
+          'orderConfirmation',
+          {
+            name: customerName,
+            orderNumber: order._id.toString().slice(-6),
+            orderDate: new Date().toLocaleDateString(),
+            totalAmount: total.toFixed(2),
+            paymentMethod: 'Credit Card',
+            shippingMethod: 'Standard Shipping',
+            estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            subtotal: (total - shippingCost - taxPrice).toFixed(2),
+            shippingCost: shippingCost.toFixed(2),
+            tax: taxPrice.toFixed(2),
+            totalAmount: total.toFixed(2),
+            shippingAddress,
+            trackingUrl: `${process.env.FRONTEND_URL}/order/${order._id}`
+          }
+        );
 
-      res.status(201).json({ 
-        clientSecret: paymentIntent.client_secret, 
-        orderId: order._id 
-      });
+        res.status(201).json({ 
+          clientSecret: paymentIntent.client_secret, 
+          orderId: order._id 
+        });
+      } catch (error) {
+        // If payment intent creation fails, delete the order
+        await Order.findByIdAndDelete(order._id);
+        throw error;
+      }
     } else {
-      // For cash on delivery, just send confirmation email
+      // For cash on delivery
       await sendEmail(
         customerEmail,
         'Order Confirmation',
@@ -101,15 +126,15 @@ const createOrder = async (req, res) => {
           name: customerName,
           orderNumber: order._id.toString().slice(-6),
           orderDate: new Date().toLocaleDateString(),
-          totalAmount: totalAmount.toFixed(2),
+          totalAmount: total.toFixed(2),
           paymentMethod: 'Cash on Delivery',
           shippingMethod: 'Standard Shipping',
           estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          subtotal: totalAmount - shippingPrice - taxPrice,
-          shippingCost: shippingPrice,
-          tax: taxPrice,
-          totalAmount: totalAmount,
-          shippingAddress: shippingAddress,
+          subtotal: (total - shippingCost - taxPrice).toFixed(2),
+          shippingCost: shippingCost.toFixed(2),
+          tax: taxPrice.toFixed(2),
+          totalAmount: total.toFixed(2),
+          shippingAddress,
           trackingUrl: `${process.env.FRONTEND_URL}/order/${order._id}`
         }
       );
@@ -119,10 +144,12 @@ const createOrder = async (req, res) => {
         orderId: order._id 
       });
     }
-
   } catch (error) {
-    console.error('Error creating order or payment intent:', error);
-    res.status(500).json({ message: error.message || 'Failed to create order or payment intent.' });
+    console.error('Error creating order:', error);
+    res.status(500).json({ 
+      message: error.message || 'Failed to create order.',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -197,9 +224,47 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+const getPaymentIntent = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Check if the order belongs to the user
+    if (order.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to access this order' });
+    }
+
+    // Check if payment is already completed
+    if (order.paymentStatus === 'completed') {
+      return res.status(400).json({ message: 'Payment already completed for this order' });
+    }
+
+    // Create a payment intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(order.totalAmount * 100), // Convert to cents
+      currency: 'usd',
+      metadata: {
+        orderId: order._id.toString(),
+        userId: req.user._id.toString()
+      }
+    });
+
+    res.json({
+      clientSecret: paymentIntent.client_secret
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+    res.status(500).json({ message: 'Error creating payment intent' });
+  }
+};
+
 module.exports = {
   createOrder,
   updatePaymentStatus,
   getUserOrders,
-  getAllOrders
+  getAllOrders,
+  getPaymentIntent
 }; 

@@ -6,6 +6,7 @@ const { protect, admin } = require('../middleware/auth');
 const { sendEmail } = require('../utils/sendEmail');
 const stripe = require('../config/stripe');
 const dotenv = require('dotenv');
+const { createOrder, getOrderById, getPaymentIntent } = require('../controllers/orderController');
 
 // Load environment variables
 dotenv.config();
@@ -447,5 +448,7 @@ router.delete('/:id', protect, admin, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+router.get('/:orderId/payment-intent', protect, getPaymentIntent);
 
 module.exports = router; 

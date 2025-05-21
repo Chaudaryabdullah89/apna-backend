@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Store = require('../models/Store');
 const Settings = require('../models/Settings');
+const { sendEmail } = require('../utils/emailUtils');
 
 // Get admin settings
 router.get('/settings', protect, admin, async (req, res) => {
@@ -240,6 +241,33 @@ router.put('/settings', protect, admin, async (req, res) => {
   } catch (error) {
     console.error('Error updating settings:', error);
     res.status(500).json({ message: 'Error updating settings' });
+  }
+});
+
+// Send custom email to customer
+router.post('/send-email', protect, admin, async (req, res) => {
+  try {
+    const { to, subject, message, template } = req.body;
+
+    if (!to || !subject || !message) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    await sendEmail(
+      to,
+      subject,
+      template || 'custom',
+      {
+        message,
+        subject,
+        customEmail: true
+      }
+    );
+
+    res.json({ message: 'Email sent successfully' });
+  } catch (error) {
+    console.error('Error sending custom email:', error);
+    res.status(500).json({ message: error.message || 'Failed to send email' });
   }
 });
 

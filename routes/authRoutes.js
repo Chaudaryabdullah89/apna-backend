@@ -198,7 +198,7 @@ router.post('/google', async (req, res) => {
     // Check if user exists
     let user = await User.findOne({ 
       $or: [
-        { email },
+        { email: email.toLowerCase() },
         { googleId }
       ]
     });
@@ -206,18 +206,25 @@ router.post('/google', async (req, res) => {
     if (!user) {
       // Create new user if doesn't exist
       user = await User.create({
-        email,
+        email: email.toLowerCase(),
         name,
         googleId,
         profilePicture: picture,
         isActive: true,
-        role: 'user' // Default role
+        role: 'user', // Default role
+        isEmailVerified: true // Google emails are verified
       });
     } else {
       // Update user info if needed
-      user.name = name;
-      user.googleId = googleId;
-      user.profilePicture = picture;
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+      if (!user.profilePicture) {
+        user.profilePicture = picture;
+      }
+      if (!user.isEmailVerified) {
+        user.isEmailVerified = true;
+      }
       await user.save();
     }
 
@@ -225,8 +232,16 @@ router.post('/google', async (req, res) => {
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '30d' }
     );
+
+    // Set cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
 
     // Send response
     res.json({
@@ -236,12 +251,16 @@ router.post('/google', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        isEmailVerified: user.isEmailVerified
       }
     });
   } catch (error) {
     console.error('Google auth error:', error);
-    res.status(500).json({ message: 'Google authentication failed' });
+    res.status(500).json({ 
+      message: 'Google authentication failed',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

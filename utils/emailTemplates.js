@@ -466,6 +466,28 @@ const getEmailTemplate = (type, data) => {
           </div>
         </div>
       </div>
+    `,
+
+    custom: (data) => `
+      <div style="${styles.container}">
+        <div style="${styles.header}">
+          <h1 style="${styles.title}">${data.subject}</h1>
+          <p style="${styles.subtitle}">Message from our team</p>
+        </div>
+        <div style="${styles.content}">
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <div style="color: #4b5563; line-height: 1.6; white-space: pre-wrap;">
+              ${data.message}
+            </div>
+          </div>
+
+          <div style="${styles.footer}">
+            <p style="color: #6b7280; font-size: 12px;">
+              This is a message from our team. If you have any questions, please contact our support.
+            </p>
+          </div>
+        </div>
+      </div>
     `
   };
 
