@@ -169,25 +169,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 const connectDB = async () => {
   try {
     console.log('Attempting to connect to MongoDB...');
-    console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Set' : 'Not Set');
     
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 30000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
-      retryWrites: true,
-      w: 'majority',
-      maxPoolSize: 10,
-      minPoolSize: 5,
-      maxIdleTimeMS: 60000,
-      family: 4, // Use IPv4, skip trying IPv6
-      heartbeatFrequencyMS: 10000,
-      retryReads: true,
-      ssl: true,
-      bufferCommands: true,
-      bufferTimeoutMS: 30000 // Increased from default 10000ms
+      
     });
     console.log('Connected to MongoDB successfully');
 
@@ -201,12 +185,7 @@ const connectDB = async () => {
       console.log('Products seeded successfully');
     }
   } catch (err) {
-    console.error('MongoDB connection error details:', {
-      name: err.name,
-      message: err.message,
-      code: err.code,
-      stack: err.stack
-    });
+    console.error('MongoDB connection error:', err.message);
     // Retry connection after 5 seconds
     console.log('Retrying MongoDB connection in 5 seconds...');
     setTimeout(connectDB, 5000);
@@ -219,7 +198,7 @@ mongoose.connection.on('connected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
+  console.error('Mongoose connection error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
