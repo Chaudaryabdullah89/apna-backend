@@ -2,10 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.js",
+      "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["VIews/**/*", "public/**/*"]
+        "includeFiles": ["views/**/*", "public/**/*", "node_modules/**/*"]
       }
     }
   ],
@@ -24,7 +24,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/app.js"
+      "dest": "/server.js"
     }
   ]
 } 
