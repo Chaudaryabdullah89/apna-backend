@@ -57,6 +57,16 @@ app.use(cors({
   exposedHeaders: ['Access-Control-Allow-Origin']
 }));
 
+// Content Security Policy
+app.use(helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    frameSrc: ["'self'", 'https://js.stripe.com'],
+    scriptSrc: ["'self'", 'https://js.stripe.com'],
+    connectSrc: ["'self'", 'https://apna-backend.vercel.app']
+  }
+}));
+
 // Add request logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`, {
