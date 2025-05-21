@@ -5,7 +5,7 @@
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["views/**/*", "public/**/*", "node_modules/**/*"]
+        "includeFiles": ["views/**/*", "public/**/*", "node_modules/**/*", "routes/**/*", "models/**/*", "middleware/**/*", "config/**/*"]
       }
     }
   ],
@@ -24,6 +24,11 @@
     },
     {
       "src": "/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "status": 404,
       "dest": "/server.js"
     }
   ]
