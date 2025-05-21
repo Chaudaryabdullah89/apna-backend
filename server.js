@@ -99,11 +99,13 @@ if (process.env.NODE_ENV === 'development') {
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:5173'
-    : 'https://store-1-c7uw.vercel.app',
+  origin: [
+    'https://store-1-c7uw.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -171,7 +173,8 @@ const connectDB = async () => {
     console.log('Attempting to connect to MongoDB...');
     
     await mongoose.connect(process.env.MONGODB_URI, {
-      
+      useNewUrlParser: true,
+      useUnifiedTopology: true
     });
     console.log('Connected to MongoDB successfully');
 
