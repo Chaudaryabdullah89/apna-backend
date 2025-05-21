@@ -94,23 +94,8 @@
     "update-notifier": "^6.0.2",
     "debug": "^4.3.4",
     "nyc": "^15.1.0",
-    "coveralls": "^3.1.1",
-    "jest-junit": "^16.0.0",
-    "jest-sonar-reporter": "^2.0.0",
-    "jest-stare": "^2.3.0",
-    "jest-html-reporter": "^3.10.2",
-    "jest-html-reporters": "^3.1.6",
-    "jest-pretty": "^0.1.0",
-    "jest-pretty-html-reporter": "^0.1.0",
-    "jest-pretty-html-reporter-2": "^0.1.0",
-    "jest-pretty-html-reporter-3": "^0.1.0",
-    "jest-pretty-html-reporter-4": "^0.1.0",
-    "jest-pretty-html-reporter-5": "^0.1.0",
-    "jest-pretty-html-reporter-6": "^0.1.0",
-    "jest-pretty-html-reporter-7": "^0.1.0",
-    "jest-pretty-html-reporter-8": "^0.1.0",
-    "jest-pretty-html-reporter-9": "^0.1.0",
-    "jest-pretty-html-reporter-10": "^0.1.0"
+    "coveralls": "^3.1.1"
+  
   },
   "engines": {
     "node": ">=18.0.0"
