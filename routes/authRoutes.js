@@ -126,6 +126,9 @@ router.post('/login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
+    // Determine redirect URL based on role
+    const redirectUrl = user.role === 'admin' ? '/admin/dashboard' : '/';
+
     res.json({
       token,
       user: {
@@ -133,7 +136,8 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role
-      }
+      },
+      redirectUrl
     });
   } catch (error) {
     console.error('Login error:', error);
