@@ -47,15 +47,20 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   app.use(morgan('combined'));
 }
-app.options('*', cors());
+
 // CORS configuration
-app.use(cors({
-  origin: ['https://store-1-c7uw.vercel.app', 'http://localhost:5173'],
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5173'
+    : 'https://store-1-c7uw.vercel.app',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   optionsSuccessStatus: 200
-}));
+};
+
+app.use(cors(corsOptions));
+
 // Content Security Policy
 app.use(helmet.contentSecurityPolicy({
   directives: {
