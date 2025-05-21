@@ -186,12 +186,8 @@ const connectDB = async () => {
       heartbeatFrequencyMS: 10000,
       retryReads: true,
       ssl: true,
-      sslValidate: true,
-      sslCA: undefined,
-      sslCert: undefined,
-      sslKey: undefined,
-      sslPass: undefined,
-      sslCRL: undefined
+      bufferCommands: true,
+      bufferTimeoutMS: 30000 // Increased from default 10000ms
     });
     console.log('Connected to MongoDB successfully');
 
@@ -217,7 +213,32 @@ const connectDB = async () => {
   }
 };
 
-connectDB();
+// Add mongoose connection event handlers
+mongoose.connection.on('connected', () => {
+  console.log('Mongoose connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('Mongoose connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('Mongoose disconnected from MongoDB');
+  // Attempt to reconnect
+  setTimeout(connectDB, 5000);
+});
+
+// Handle process termination
+process.on('SIGINT', async () => {
+  try {
+    await mongoose.connection.close();
+    console.log('Mongoose connection closed through app termination');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during mongoose connection closure:', err);
+    process.exit(1);
+  }
+});
 
 // Import routes
 const userRoutes = require('./routes/userRoutes');
