@@ -204,7 +204,8 @@ app.use((err, req, res, next) => {
     message: err.message,
     stack: err.stack,
     name: err.name,
-    code: err.code
+    code: err.code,
+    status: err.status
   });
   res.status(500).send('Something broke!');
 });

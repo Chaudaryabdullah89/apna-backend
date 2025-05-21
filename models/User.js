@@ -12,8 +12,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     trim: true,
-    lowercase: true,
-    index: true
+    lowercase: true
   },
   password: {
     type: String,
@@ -24,8 +23,7 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true,
-    index: true
+    sparse: true
   },
   profilePicture: {
     type: String
@@ -85,9 +83,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   }
 };
 
-// Drop any existing indexes that might cause conflicts
 const User = mongoose.model('User', userSchema);
-User.collection.dropIndex('username_1').catch(() => {});
-User.collection.dropIndex('googleId_1').catch(() => {});
 
 module.exports = User; 
