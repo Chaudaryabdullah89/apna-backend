@@ -97,15 +97,15 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Check if user exists
-    const user = await User.findOne({ email });
+    // Check if user exists and explicitly select password field
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
       console.log('User not found:', email);
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Check password using the model's method
-    const isMatch = await user.comparePassword(password);
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log('Invalid password for user:', email);
       return res.status(400).json({ message: 'Invalid email or password' });
@@ -141,15 +141,18 @@ router.post('/login', async (req, res) => {
       console.log('Regular user, redirecting to home');
     }
 
+    // Remove password from user object before sending response
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
     res.json({
       success: true,
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
+      user: userResponse,
       redirectUrl
     });
   } catch (error) {
