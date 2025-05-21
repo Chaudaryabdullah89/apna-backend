@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Product = require('../models/Product');
+const { sendEmail } = require('../utils/sendEmail');
 
 // Get all orders with detailed information
 const getAllOrders = async (req, res) => {
@@ -104,32 +105,56 @@ const updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status, note } = req.body;
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId)
+      .populate('user', 'name email')
+      .populate('items.product');
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Add to status history
+    // Update order status
+    order.status = status;
     order.statusHistory.push({
       status,
-      note,
+      note: note || `Status updated to ${status}`,
       updatedAt: new Date()
     });
 
-    // Update order status
-    order.status = status;
-
-    // Update delivery status if needed
-    if (status === 'delivered') {
-      order.isDelivered = true;
-      order.deliveredAt = new Date();
-    }
-
     await order.save();
+
+    // Send email notification
+    try {
+      await sendEmail(
+        order.customerEmail,
+        'Order Status Update',
+        'orderStatusUpdate',
+        {
+          name: order.customerName,
+          orderNumber: order._id.toString().slice(-6),
+          status: status.charAt(0).toUpperCase() + status.slice(1),
+          updatedAt: new Date().toLocaleString(),
+          trackingUrl: `${process.env.FRONTEND_URL}/order/${order._id}`,
+          items: order.items.map(item => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          totalAmount: order.totalAmount,
+          shippingAddress: order.shippingAddress
+        }
+      );
+    } catch (emailError) {
+      console.error('Error sending status update email:', emailError);
+      // Don't fail the request if email fails
+    }
 
     res.json({
       message: 'Order status updated successfully',
-      order
+      order: {
+        ...order.toObject(),
+        statusHistory: order.statusHistory
+      }
     });
   } catch (error) {
     console.error('Error updating order status:', error);

@@ -168,22 +168,57 @@ const getEmailTemplate = (type, data) => {
       </div>
     `,
 
-    orderStatusUpdate: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
-          <h1 style="color: #333; text-align: center;">Order Status Update</h1>
-          <p style="color: #666; line-height: 1.6;">Hi ${data.name || 'there'},</p>
-          <p style="color: #666; line-height: 1.6;">Your order status has been updated:</p>
-          <div style="background-color: white; padding: 20px; border-radius: 5px; margin: 20px 0;">
-            <p style="color: #333; margin: 0;"><strong>Order Number:</strong> ${data.orderNumber || 'N/A'}</p>
-            <p style="color: #333; margin: 10px 0;"><strong>New Status:</strong> ${data.status || 'N/A'}</p>
-            <p style="color: #333; margin: 0;"><strong>Updated At:</strong> ${data.updatedAt || 'N/A'}</p>
+    orderStatusUpdate: (data) => `
+      <div style="${styles.container}">
+        <div style="${styles.header}">
+          <h1 style="${styles.title}">Order Status Update</h1>
+          <p style="${styles.subtitle}">Your order status has been updated</p>
+        </div>
+        <div style="${styles.content}">
+          <p style="color: #4b5563; margin-bottom: 20px;">Dear ${data.name},</p>
+          
+          <div style="${styles.highlight}">
+            <h2 style="color: #1f2937; margin: 0 0 10px 0;">Order #${data.orderNumber}</h2>
+            <p style="color: #4b5563; margin: 5px 0;">
+              <strong>Status:</strong> 
+              <span style="${styles.badge} background-color: #2563eb; color: white;">
+                ${data.status}
+              </span>
+            </p>
+            <p style="color: #4b5563; margin: 5px 0;">
+              <strong>Updated:</strong> ${data.updatedAt}
+            </p>
           </div>
-          <p style="color: #666; line-height: 1.6;">You can track your order status by clicking the button below:</p>
+
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0;">Order Items:</h3>
+            ${data.items.map(item => `
+              <div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;">
+                <p style="color: #4b5563; margin: 5px 0;"><strong>${item.name}</strong></p>
+                <p style="color: #6b7280; margin: 5px 0;">Quantity: ${item.quantity}</p>
+                <p style="color: #6b7280; margin: 5px 0;">Price: $${item.price.toFixed(2)}</p>
+              </div>
+            `).join('')}
+          </div>
+
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="color: #1f2937; margin: 0 0 15px 0;">Shipping Address:</h3>
+            <p style="color: #4b5563; margin: 5px 0;">${data.shippingAddress.street}</p>
+            <p style="color: #4b5563; margin: 5px 0;">
+              ${data.shippingAddress.city}, ${data.shippingAddress.state} ${data.shippingAddress.postalCode}
+            </p>
+            <p style="color: #4b5563; margin: 5px 0;">${data.shippingAddress.country}</p>
+          </div>
+
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${data.trackingUrl || '#'}" style="background-color: #333; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Track Order</a>
+            <a href="${data.trackingUrl}" style="${styles.button}">View Order Details</a>
           </div>
-          <p style="color: #999; font-size: 12px; margin-top: 30px;">If you have any questions, please contact our support team.</p>
+
+          <div style="${styles.footer}">
+            <p style="color: #6b7280; font-size: 12px;">
+              If you have any questions about your order, please contact our customer support.
+            </p>
+          </div>
         </div>
       </div>
     `,
