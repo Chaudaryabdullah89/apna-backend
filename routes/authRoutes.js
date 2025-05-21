@@ -90,6 +90,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log('Login attempt for:', email);
 
     // Validate required fields
     if (!email || !password) {
@@ -99,14 +100,18 @@ router.post('/login', async (req, res) => {
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('User not found:', email);
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     // Check password using the model's method
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      console.log('Invalid password for user:', email);
       return res.status(400).json({ message: 'Invalid email or password' });
     }
+
+    console.log('User authenticated:', { email, role: user.role });
 
     // Create token with role
     const token = jwt.sign(
@@ -127,9 +132,17 @@ router.post('/login', async (req, res) => {
     });
 
     // Determine redirect URL based on role
-    const redirectUrl = user.role === 'admin' ? '/admin/dashboard' : '/';
+    let redirectUrl;
+    if (user.role === 'admin') {
+      redirectUrl = '/admin/dashboard';
+      console.log('Admin user, redirecting to dashboard');
+    } else {
+      redirectUrl = '/';
+      console.log('Regular user, redirecting to home');
+    }
 
     res.json({
+      success: true,
       token,
       user: {
         id: user._id,
