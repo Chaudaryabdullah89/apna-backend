@@ -25,10 +25,55 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      connectSrc: [
+        "'self'",
+        'http://localhost:5000',
+        'https://apna-backend.vercel.app',
+        'https://api.stripe.com',
+        'https://r.stripe.com',
+        'https://hooks.stripe.com'
+      ],
+      frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.stripe.com'],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'data:', 'https:'],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameAncestors: ["'none'"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: []
+    },
+    useDefaults: false
+  }
+}));
+
 app.use(mongoSanitize());
 app.use(xss());
 app.use(hpp());
+
+// Set CSP headers directly
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "connect-src 'self' http://localhost:5000 https://apna-backend.vercel.app https://api.stripe.com https://r.stripe.com https://hooks.stripe.com; " +
+    "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "font-src 'self' data: https:; " +
+    "frame-ancestors 'none'; " +
+    "object-src 'none'; " +
+    "base-uri 'self'; " +
+    "form-action 'self';"
+  );
+  next();
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -63,16 +108,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// Content Security Policy
-app.use(helmet.contentSecurityPolicy({
-  directives: {
-    defaultSrc: ["'self'"],
-    frameSrc: ["'self'", 'https://js.stripe.com'],
-    scriptSrc: ["'self'", 'https://js.stripe.com'],
-    connectSrc: ["'self'", 'https://apna-backend.vercel.app']
-  }
-}));
 
 // Add request logging middleware
 app.use((req, res, next) => {
