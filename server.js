@@ -47,16 +47,23 @@ if (process.env.NODE_ENV === 'development') {
 } else {
   app.use(morgan('combined'));
 }
-
+app.options('*', cors());
 // CORS configuration
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://apna-backend.vercel.app', 'http://localhost:5000', 'https://store-1-c7uw.vercel.app'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Access-Control-Allow-Origin']
+  // origin: [
+  //   'http://localhost:5173',
+  //   'http://127.0.0.1:5173',
+  //   'https://apna-backend.vercel.app',
+  //   'http://localhost:5000',
+  //   'https://store-1-c7uw.vercel.app'
+  // ],
+  // credentials: true,
+  // methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  // allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  // exposedHeaders: ['Access-Control-Allow-Origin']
+  origin: true,
+  credentials: true
 }));
-
 // Content Security Policy
 app.use(helmet.contentSecurityPolicy({
   directives: {
