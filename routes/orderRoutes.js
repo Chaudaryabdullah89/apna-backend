@@ -36,6 +36,57 @@ router.get('/', protect, admin, async (req, res) => {
   }
 });
 
+// Test email configuration
+router.post('/test-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    console.log('Testing email configuration...');
+    console.log('Environment variables check:');
+    console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Set' : 'Not Set');
+    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Set' : 'Not Set');
+    console.log('FRONTEND_URL:', process.env.FRONTEND_URL ? 'Set' : 'Not Set');
+
+    // Send test email
+    await sendEmail(
+      email,
+      'Test Email',
+      'orderConfirmation',
+      {
+        name: 'Test User',
+        orderNumber: '123456',
+        orderDate: new Date().toLocaleDateString(),
+        paymentMethod: 'Test Payment',
+        shippingMethod: 'Standard Shipping',
+        estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        subtotal: 100,
+        shippingCost: 10,
+        tax: 5,
+        totalAmount: 115,
+        shippingAddress: {
+          street: '123 Test St',
+          city: 'Test City',
+          state: 'Test State',
+          postalCode: '12345',
+          country: 'Test Country'
+        },
+        trackingUrl: `${process.env.FRONTEND_URL}/order/test`
+      }
+    );
+
+    res.json({ message: 'Test email sent successfully' });
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({ 
+      error: 'Failed to send test email',
+      details: error.message
+    });
+  }
+});
+
 // Create new order (removed protect middleware to allow guest orders)
 router.post('/', async (req, res) => {
   try {
@@ -51,6 +102,8 @@ router.post('/', async (req, res) => {
       customerEmail,
       userId // Optional, will be null for guest orders
     } = req.body;
+
+    console.log('Creating order for:', { customerEmail, customerName });
 
     // Validate required fields
     if (!orderItems || !Array.isArray(orderItems) || orderItems.length === 0) {
@@ -100,6 +153,7 @@ router.post('/', async (req, res) => {
 
     // Send order confirmation email
     try {
+      console.log('Attempting to send order confirmation email to:', customerEmail);
       await sendEmail(
         customerEmail,
         'Order Confirmation',
@@ -121,7 +175,15 @@ router.post('/', async (req, res) => {
       );
       console.log('Order confirmation email sent successfully');
     } catch (emailError) {
-      console.error('Error sending order confirmation email:', emailError);
+      console.error('Error sending order confirmation email:', {
+        error: emailError.message,
+        stack: emailError.stack,
+        emailConfig: {
+          user: process.env.EMAIL_USER ? 'Set' : 'Not Set',
+          pass: process.env.EMAIL_PASS ? 'Set' : 'Not Set',
+          frontendUrl: process.env.FRONTEND_URL ? 'Set' : 'Not Set'
+        }
+      });
       // Don't fail order creation if email fails
     }
 

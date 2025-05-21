@@ -41,7 +41,7 @@ app.use(helmet({
       frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.stripe.com'],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+      imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://apna-backend.vercel.app'],
       fontSrc: ["'self'", 'data:', 'https:'],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -66,7 +66,7 @@ app.use((req, res, next) => {
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data: https:; " +
+    "img-src 'self' data: https: blob: https://apna-backend.vercel.app; " +
     "font-src 'self' data: https:; " +
     "frame-ancestors 'none'; " +
     "object-src 'none'; " +
