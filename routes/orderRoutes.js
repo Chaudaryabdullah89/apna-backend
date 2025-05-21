@@ -100,8 +100,7 @@ router.post('/', async (req, res) => {
       shippingPrice,
       totalPrice,
       customerName,
-      customerEmail,
-      userId // Optional, will be null for guest orders
+      customerEmail
     } = req.body;
 
     console.log('Creating order for:', { customerEmail, customerName });
@@ -131,12 +130,16 @@ router.post('/', async (req, res) => {
       }
     }
 
+    // Validate prices
+    if (!itemsPrice || !taxPrice || !shippingPrice || !totalPrice) {
+      return res.status(400).json({ error: 'All price fields are required' });
+    }
+
     // Create order
     const order = new Order({
-      user: userId || null, // Will be null for guest orders
       customerName,
       customerEmail,
-      orderItems,
+      items: orderItems,
       shippingAddress,
       paymentMethod,
       itemsPrice,
@@ -163,10 +166,10 @@ router.post('/', async (req, res) => {
           name: customerName,
           orderNumber: savedOrder._id.toString().slice(-6),
           orderDate: new Date().toLocaleDateString(),
-          paymentMethod: savedOrder.paymentMethod || 'Credit Card',
+          paymentMethod: savedOrder.paymentMethod,
           shippingMethod: 'Standard Shipping',
           estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          subtotal: savedOrder.totalAmount,
+          subtotal: savedOrder.itemsPrice,
           shippingCost: savedOrder.shippingPrice,
           tax: savedOrder.taxPrice,
           totalAmount: savedOrder.totalAmount,
@@ -176,16 +179,36 @@ router.post('/', async (req, res) => {
       );
       console.log('Order confirmation email sent successfully');
     } catch (emailError) {
-      console.error('Error sending order confirmation email:', {
-        error: emailError.message,
-        stack: emailError.stack,
-        emailConfig: {
-          user: process.env.EMAIL_USER ? 'Set' : 'Not Set',
-          pass: process.env.EMAIL_PASS ? 'Set' : 'Not Set',
-          frontendUrl: process.env.FRONTEND_URL ? 'Set' : 'Not Set'
-        }
-      });
+      console.error('Error sending order confirmation email:', emailError);
       // Don't fail order creation if email fails
+    }
+
+    // If payment method is card, create payment intent
+    if (paymentMethod === 'card') {
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: Math.round(totalPrice * 100), // Convert to cents
+          currency: 'usd',
+          metadata: { orderId: savedOrder._id.toString() },
+          automatic_payment_methods: {
+            enabled: true,
+          },
+        });
+
+        // Update order with payment intent ID
+        savedOrder.paymentIntentId = paymentIntent.id;
+        await savedOrder.save();
+
+        return res.status(201).json({
+          message: 'Order created successfully',
+          order: savedOrder,
+          clientSecret: paymentIntent.client_secret
+        });
+      } catch (error) {
+        // If payment intent creation fails, delete the order
+        await Order.findByIdAndDelete(savedOrder._id);
+        throw error;
+      }
     }
 
     res.status(201).json({

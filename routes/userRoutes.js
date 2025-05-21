@@ -13,6 +13,7 @@ const fs = require('fs');
 const passport = require('passport');
 const Newsletter = require('../models/Newsletter');
 const Contact = require('../models/Contact');
+const Order = require('../models/Order');
 
 router.use(express.json());
 
@@ -310,9 +311,28 @@ router.post('/avatar', protect, upload.single('avatar'), async (req, res) => {
 // Get all users (admin only)
 router.get('/', protect, admin, async (req, res) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const users = await User.find()
+      .select('-password')
+      .lean();
+
+    // Get order statistics for each user
+    const usersWithStats = await Promise.all(users.map(async (user) => {
+      const orders = await Order.find({ user: user._id });
+      const orderCount = orders.length;
+      const totalSpent = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+      const lastOrder = orders.length > 0 ? orders[0].createdAt : null;
+
+      return {
+        ...user,
+        orderCount,
+        totalSpent,
+        lastOrder
+      };
+    }));
+
+    res.json(usersWithStats);
   } catch (error) {
+    console.error('Error fetching users:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
