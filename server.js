@@ -49,7 +49,6 @@ if (process.env.NODE_ENV === 'development') {
 }
 app.options('*', cors());
 // CORS configuration
-app.use(cors(corsOptions));
 app.use(cors({
   origin: ['https://store-1-c7uw.vercel.app', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
