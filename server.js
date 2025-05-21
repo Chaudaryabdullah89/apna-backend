@@ -174,15 +174,24 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
       retryWrites: true,
       w: 'majority',
       maxPoolSize: 10,
       minPoolSize: 5,
       maxIdleTimeMS: 60000,
-      connectTimeoutMS: 10000,
-      family: 4 // Use IPv4, skip trying IPv6
+      family: 4, // Use IPv4, skip trying IPv6
+      heartbeatFrequencyMS: 10000,
+      retryReads: true,
+      ssl: true,
+      sslValidate: true,
+      sslCA: undefined,
+      sslCert: undefined,
+      sslKey: undefined,
+      sslPass: undefined,
+      sslCRL: undefined
     });
     console.log('Connected to MongoDB successfully');
 
