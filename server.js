@@ -226,6 +226,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const adminOrderRoutes = require('./routes/adminOrderRoutes');
 const authRoutes = require('./routes/authRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 
@@ -236,6 +237,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
