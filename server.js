@@ -50,7 +50,8 @@ if (process.env.NODE_ENV === 'development') {
 
 // CORS configuration
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173','https://apna-backend.vercel.app/' ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
@@ -175,9 +176,12 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Basic route
+// Set EJS as the view engine
+app.set('view engine', 'ejs');
+
+// Define a route for the home page
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to the Ecommerce API' });
+    res.render('index');
 });
 
 // Handle unhandled promise rejections
