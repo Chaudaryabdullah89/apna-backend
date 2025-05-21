@@ -108,6 +108,9 @@ if (!fs.existsSync(blogUploadsDir)) {
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Database connection with retry logic
 const connectDB = async () => {
   try {
@@ -177,6 +180,7 @@ app.get('/health', (req, res) => {
 
 // Set EJS as the view engine
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Define a route for the home page
 app.get('/', (req, res) => {
@@ -185,7 +189,11 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('Error details:', {
+    message: err.message,
+    stack: err.stack,
+    name: err.name
+  });
   res.status(500).send('Something broke!');
 });
 
