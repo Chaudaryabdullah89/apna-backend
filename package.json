@@ -73,16 +73,7 @@
     "joi": "^17.12.1",
     "express-rate-limit": "^7.1.5",
     "express-slow-down": "^1.6.0",
-    "express-brute": "^1.0.1",
-    "express-brute-mongoose": "^1.0.0",
-    "express-brute-redis": "^1.0.0",
-    "express-brute-memcached": "^1.0.0",
-    "express-brute-mongodb": "^1.0.0",
-    "express-brute-sequelize": "^1.0.0",
-    "express-brute-knex": "^1.0.0",
-    "express-brute-waterline": "^1.0.0",
-    "express-brute-bookshelf": "^1.0.0",
-    "express-brute-waterline": "^1.0.0"
+   
   },
   "devDependencies": {
     "eslint": "^8.56.0",
