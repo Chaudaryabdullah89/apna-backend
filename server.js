@@ -31,7 +31,7 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       connectSrc: [
         "'self'",
-        process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : 'https://apna-backend.vercel.app',
+        process.env.NODE_ENV === 'development' ? 'https://apna-backend.vercel.app' : 'https://apna-backend.vercel.app',
         'https://api.stripe.com',
         'https://r.stripe.com',
         'https://hooks.stripe.com'
