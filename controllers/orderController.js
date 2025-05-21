@@ -17,12 +17,17 @@ const createOrder = async (req, res) => {
       customerEmail,
       paymentMethod,
       shippingCost,
-      taxPrice,
-      discountAmount
+      taxPrice
     } = req.body;
 
+    console.log('Received order request:', req.body);
+
     // Basic validation
-    if (!items || items.length === 0 || !shippingAddress || !totalAmount || !customerName || !customerEmail) {
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: 'Order must contain at least one item.' });
+    }
+
+    if (!shippingAddress || !totalAmount || !customerName || !customerEmail) {
       return res.status(400).json({ message: 'Missing required order details.' });
     }
 
@@ -42,7 +47,6 @@ const createOrder = async (req, res) => {
     // Add shipping and tax
     total += shippingCost || 0;
     total += taxPrice || 0;
-    total -= discountAmount || 0;
 
     // Create a new order
     const order = new Order({
@@ -51,7 +55,6 @@ const createOrder = async (req, res) => {
       totalAmount: total,
       shippingCost,
       taxPrice,
-      discountAmount,
       paymentMethod,
       customerName,
       customerEmail,
@@ -61,6 +64,7 @@ const createOrder = async (req, res) => {
 
     // Save the order to the database
     await order.save();
+    console.log('Order saved successfully:', order._id);
 
     // Update product stock
     for (const item of items) {
@@ -85,28 +89,6 @@ const createOrder = async (req, res) => {
         order.paymentIntentId = paymentIntent.id;
         await order.save();
 
-        // Send order confirmation email
-        await sendEmail(
-          customerEmail,
-          'Order Confirmation',
-          'orderConfirmation',
-          {
-            name: customerName,
-            orderNumber: order._id.toString().slice(-6),
-            orderDate: new Date().toLocaleDateString(),
-            totalAmount: total.toFixed(2),
-            paymentMethod: 'Credit Card',
-            shippingMethod: 'Standard Shipping',
-            estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-            subtotal: (total - shippingCost - taxPrice).toFixed(2),
-            shippingCost: shippingCost.toFixed(2),
-            tax: taxPrice.toFixed(2),
-            totalAmount: total.toFixed(2),
-            shippingAddress,
-            trackingUrl: `${process.env.FRONTEND_URL}/order/${order._id}`
-          }
-        );
-
         res.status(201).json({ 
           clientSecret: paymentIntent.client_secret, 
           orderId: order._id 
@@ -118,27 +100,6 @@ const createOrder = async (req, res) => {
       }
     } else {
       // For cash on delivery
-      await sendEmail(
-        customerEmail,
-        'Order Confirmation',
-        'orderConfirmation',
-        {
-          name: customerName,
-          orderNumber: order._id.toString().slice(-6),
-          orderDate: new Date().toLocaleDateString(),
-          totalAmount: total.toFixed(2),
-          paymentMethod: 'Cash on Delivery',
-          shippingMethod: 'Standard Shipping',
-          estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          subtotal: (total - shippingCost - taxPrice).toFixed(2),
-          shippingCost: shippingCost.toFixed(2),
-          tax: taxPrice.toFixed(2),
-          totalAmount: total.toFixed(2),
-          shippingAddress,
-          trackingUrl: `${process.env.FRONTEND_URL}/order/${order._id}`
-        }
-      );
-
       res.status(201).json({ 
         message: 'Order created successfully',
         orderId: order._id 
