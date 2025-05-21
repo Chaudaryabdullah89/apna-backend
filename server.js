@@ -15,14 +15,9 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const morgan = require('morgan');
-const connectDB = require('./config/db');
-const MongoStore = require('connect-mongo');
 
 // Load environment variables
 dotenv.config();
-
-// Connect to database
-connectDB();
 
 const app = express();
 
@@ -104,15 +99,13 @@ if (process.env.NODE_ENV === 'development') {
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'https://store-1-c7uw.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ],
+  origin: process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5173'
+    : 'https://store-1-c7uw.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-  exposedHeaders: ['Access-Control-Allow-Origin']
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
@@ -129,18 +122,21 @@ app.use((req, res, next) => {
 
 // Session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.JWT_SECRET,
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGO_URI,
-    ttl: 24 * 60 * 60 // 1 day
-  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 1 day
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+  },
+  store: process.env.NODE_ENV === 'production' 
+    ? new (require('connect-mongo'))({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 24 * 60 * 60 // 24 hours
+      })
+    : undefined
 }));
 
 // Initialize Passport
@@ -230,7 +226,6 @@ const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const adminOrderRoutes = require('./routes/adminOrderRoutes');
 const authRoutes = require('./routes/authRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 
@@ -241,7 +236,6 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
 
