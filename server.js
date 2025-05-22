@@ -40,9 +40,10 @@ app.use(helmet({
       ],
       frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://js.stripe.com'],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       imgSrc: ["'self'", 'data:', 'https:', 'blob:', 'https://apna-backend.vercel.app'],
-      fontSrc: ["'self'", 'data:', 'https:'],
+      fontSrc: ["'self'", 'data:', 'https:', 'https://fonts.gstatic.com'],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameAncestors: ["'none'"],
@@ -62,12 +63,13 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "connect-src 'self' http://localhost:5000 https://apna-backend.vercel.app https://api.stripe.com https://r.stripe.com https://hooks.stripe.com https://apna-store-frontend.vercel.app https://admin-page-azure-three.vercel.app; " +
+    "connect-src 'self' http://localhost:5000 https://apna-backend.vercel.app https://api.stripe.com https://r.stripe.com https://hooks.stripe.com https://apna-store-frontend.vercel.app https://admin-page-azure-three.vercel.app https://store-1-c7uw.vercel.app; " +
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
-    "style-src 'self' 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+    "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
     "img-src 'self' data: https: blob: https://apna-backend.vercel.app; " +
-    "font-src 'self' data: https:; " +
+    "font-src 'self' data: https: https://fonts.gstatic.com; " +
     "frame-ancestors 'self'; " +
     "object-src 'none'; " +
     "base-uri 'self'; " +
@@ -104,7 +106,7 @@ const corsOptions = {
     'http://localhost:5173',
     'http://localhost:3000',
     'https://apna-store-frontend.vercel.app',
-    'https://admin-page-azure-three.vercel.app'  // Added admin page domain
+    'https://admin-page-azure-three.vercel.app'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
