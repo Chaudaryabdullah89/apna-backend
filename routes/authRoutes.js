@@ -104,6 +104,12 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
+    // Check if user is admin
+    if (user.role !== 'admin') {
+      console.log('Non-admin user attempted login:', email);
+      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+    }
+
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -111,7 +117,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    console.log('User authenticated:', { email, role: user.role });
+    console.log('Admin user authenticated:', { email, role: user.role });
 
     // Create token with role
     const token = jwt.sign(
@@ -131,16 +137,6 @@ router.post('/login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     });
 
-    // Determine redirect URL based on role
-    let redirectUrl;
-    if (user.role === 'admin') {
-      redirectUrl = '/admin/dashboard';
-      console.log('Admin user, redirecting to dashboard');
-    } else {
-      redirectUrl = '/';
-      console.log('Regular user, redirecting to home');
-    }
-
     // Remove password from user object before sending response
     const userResponse = {
       id: user._id,
@@ -153,7 +149,7 @@ router.post('/login', async (req, res) => {
       success: true,
       token,
       user: userResponse,
-      redirectUrl
+      redirectUrl: '/admin/dashboard'
     });
   } catch (error) {
     console.error('Login error:', error);
