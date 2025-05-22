@@ -273,6 +273,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const authRoutes = require('./routes/authRoutes');
 const blogRoutes = require('./routes/blogRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 // Log route registration
 console.log('=== Registering Routes ===');
@@ -286,6 +287,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Log all registered routes
 app._router.stack.forEach(function(r){
