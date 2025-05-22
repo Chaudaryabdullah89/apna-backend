@@ -274,6 +274,9 @@ const adminRoutes = require('./routes/adminRoutes');
 const authRoutes = require('./routes/authRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 
+// Log route registration
+console.log('=== Registering Routes ===');
+
 // Mount routes
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -283,6 +286,15 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/blogs', blogRoutes);
+
+// Log all registered routes
+app._router.stack.forEach(function(r){
+    if (r.route && r.route.path){
+        console.log('Registered route:', r.route.stack[0].method.toUpperCase(), r.route.path);
+    }
+});
+
+console.log('=== Routes Registration Complete ===');
 
 // Health check endpoint
 app.get('/health', (req, res) => {

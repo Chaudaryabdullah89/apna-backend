@@ -6,6 +6,14 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { OAuth2Client } = require('google-auth-library');
 
+console.log('=== Auth Routes Module Loaded ===');
+
+// Test route
+router.get('/test', (req, res) => {
+  console.log('Test route hit');
+  res.json({ message: 'Auth routes are working' });
+});
+
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Register a new user
@@ -310,6 +318,14 @@ router.post('/google', async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
+});
+
+// Log all registered auth routes
+console.log('=== Auth Routes ===');
+router.stack.forEach(function(r){
+    if (r.route && r.route.path){
+        console.log('Auth route:', r.route.stack[0].method.toUpperCase(), r.route.path);
+    }
 });
 
 module.exports = router; 
