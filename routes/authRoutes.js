@@ -104,12 +104,6 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Check if user is admin
-    if (user.role !== 'admin') {
-      console.log('Non-admin user attempted login:', email);
-      return res.status(403).json({ message: 'Access denied. Admin privileges required.' });
-    }
-
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
@@ -117,7 +111,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    console.log('Admin user authenticated:', { email, role: user.role });
+    console.log('User authenticated:', { email, role: user.role });
 
     // Create token with role
     const token = jwt.sign(
@@ -149,7 +143,7 @@ router.post('/login', async (req, res) => {
       success: true,
       token,
       user: userResponse,
-      redirectUrl: '/admin/dashboard'
+      redirectUrl: user.role === 'admin' ? '/admin/dashboard' : '/'
     });
   } catch (error) {
     console.error('Login error:', error);

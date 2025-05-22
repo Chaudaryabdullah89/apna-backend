@@ -62,13 +62,13 @@ app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "connect-src 'self' http://localhost:5000 https://apna-backend.vercel.app https://api.stripe.com https://r.stripe.com https://hooks.stripe.com; " +
+    "connect-src 'self' http://localhost:5000 https://apna-backend.vercel.app https://api.stripe.com https://r.stripe.com https://hooks.stripe.com https://apna-store-frontend.vercel.app; https://admin-page-azure-three.vercel.app/ " +
     "frame-src 'self' https://js.stripe.com https://hooks.stripe.com; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; " +
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: https: blob: https://apna-backend.vercel.app; " +
     "font-src 'self' data: https:; " +
-    "frame-ancestors 'none'; " +
+    "frame-ancestors 'self'; " +
     "object-src 'none'; " +
     "base-uri 'self'; " +
     "form-action 'self';"
@@ -102,7 +102,8 @@ const corsOptions = {
   origin: [
     'https://store-1-c7uw.vercel.app',
     'http://localhost:5173',
-    'http://localhost:3000'
+    'http://localhost:3000',
+    'https://apna-store-frontend.vercel.app'  // Add your frontend domain
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
