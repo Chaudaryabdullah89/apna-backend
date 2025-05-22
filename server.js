@@ -182,6 +182,13 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10kb' })); // Limit body size
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+// Add request body logging middleware
+app.use((req, res, next) => {
+  console.log('Request body:', req.body);
+  console.log('Content-Type:', req.headers['content-type']);
+  next();
+});
+
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, 'uploads');
 const blogUploadsDir = path.join(uploadsDir, 'blog');

@@ -89,11 +89,18 @@ router.post('/register', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received:', {
+      body: req.body,
+      headers: req.headers,
+      contentType: req.headers['content-type']
+    });
+    
     const { email, password } = req.body;
     console.log('Login attempt for:', email);
 
     // Validate required fields
     if (!email || !password) {
+      console.log('Missing fields:', { email: !!email, password: !!password });
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
