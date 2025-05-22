@@ -89,36 +89,83 @@ router.post('/register', async (req, res) => {
 // Login user
 router.post('/login', async (req, res) => {
   try {
-    console.log('Login request received:', {
-      body: req.body,
-      headers: req.headers,
-      contentType: req.headers['content-type']
-    });
+    console.log('=== Login Request ===');
+    console.log('Headers:', req.headers);
+    console.log('Content-Type:', req.headers['content-type']);
+    console.log('Body:', req.body);
     
+    // Check if request body exists
+    if (!req.body) {
+      console.log('No request body received');
+      return res.status(400).json({ 
+        message: 'Request body is required',
+        error: 'NO_BODY'
+      });
+    }
+
     const { email, password } = req.body;
-    console.log('Login attempt for:', email);
+    
+    // Detailed validation logging
+    console.log('Validation:', {
+      hasEmail: !!email,
+      hasPassword: !!password,
+      emailType: typeof email,
+      passwordType: typeof password
+    });
 
     // Validate required fields
     if (!email || !password) {
-      console.log('Missing fields:', { email: !!email, password: !!password });
-      return res.status(400).json({ message: 'Email and password are required' });
+      console.log('Missing fields:', { 
+        email: !!email, 
+        password: !!password,
+        emailValue: email,
+        passwordLength: password ? password.length : 0
+      });
+      return res.status(400).json({ 
+        message: 'Email and password are required',
+        error: 'MISSING_FIELDS',
+        details: {
+          email: !email ? 'Email is required' : null,
+          password: !password ? 'Password is required' : null
+        }
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('Invalid email format:', email);
+      return res.status(400).json({ 
+        message: 'Invalid email format',
+        error: 'INVALID_EMAIL'
+      });
     }
 
     // Check if user exists and explicitly select password field
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
       console.log('User not found:', email);
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ 
+        message: 'Invalid email or password',
+        error: 'USER_NOT_FOUND'
+      });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       console.log('Invalid password for user:', email);
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ 
+        message: 'Invalid email or password',
+        error: 'INVALID_PASSWORD'
+      });
     }
 
-    console.log('User authenticated:', { email, role: user.role });
+    console.log('User authenticated successfully:', { 
+      email, 
+      role: user.role,
+      userId: user._id 
+    });
 
     // Create token with role
     const token = jwt.sign(
@@ -156,7 +203,8 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', error);
     res.status(500).json({ 
       message: 'Server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

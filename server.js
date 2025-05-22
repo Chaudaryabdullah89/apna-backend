@@ -146,11 +146,14 @@ app.use((req, res, next) => {
 
 // Add request logging middleware
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`, {
-    body: req.body,
-    headers: req.headers,
-    cookies: req.cookies
-  });
+  console.log('=== Incoming Request ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('Query:', req.query);
+  console.log('Params:', req.params);
+  console.log('=====================');
   next();
 });
 
@@ -301,14 +304,27 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error details:', {
-    message: err.message,
-    stack: err.stack,
-    name: err.name,
-    code: err.code,
-    status: err.status
+  console.error('=== Error Details ===');
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  console.error('Request URL:', req.url);
+  console.error('Request Method:', req.method);
+  console.error('Request Body:', req.body);
+  console.error('===================');
+  
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err : {}
   });
-  res.status(500).send('Something broke!');
+});
+
+// Handle 404 errors
+app.use((req, res) => {
+  console.log('404 Not Found:', req.url);
+  res.status(404).json({
+    message: 'Route not found',
+    path: req.url
+  });
 });
 
 // Handle unhandled promise rejections
