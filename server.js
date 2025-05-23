@@ -117,12 +117,14 @@ const corsOptions = {
     'Origin',
     'Access-Control-Allow-Origin',
     'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Methods'
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials'
   ],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   credentials: true,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // 24 hours
 };
 
 // Apply CORS middleware
@@ -138,6 +140,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', corsOptions.allowedHeaders.join(','));
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Expose-Headers', corsOptions.exposedHeaders.join(','));
+  res.setHeader('Access-Control-Max-Age', corsOptions.maxAge);
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
