@@ -5,6 +5,26 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const { isAdmin } = require('../middleware/auth');
 
+// Get dashboard overview
+router.get('/', isAdmin, async (req, res) => {
+  try {
+    const [totalOrders, totalProducts, totalCustomers] = await Promise.all([
+      Order.countDocuments(),
+      Product.countDocuments(),
+      User.countDocuments({ role: 'user' })
+    ]);
+
+    res.json({
+      totalOrders,
+      totalProducts,
+      totalCustomers
+    });
+  } catch (error) {
+    console.error('Dashboard overview error:', error);
+    res.status(500).json({ message: 'Error fetching dashboard overview' });
+  }
+});
+
 // Get dashboard statistics
 router.get('/stats', isAdmin, async (req, res) => {
   try {
